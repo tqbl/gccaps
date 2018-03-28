@@ -76,9 +76,6 @@ def extract(dataset):
     import data_augmentation as aug
     import features
 
-    # Qualify output path if it is a base name only
-    output_path = utils.qualify_path(dataset.name + '.h5', cfg.extraction_path)
-
     # Use a logmel representation for feature extraction
     extractor = features.LogmelExtractor(cfg.sample_rate, cfg.n_window,
                                          cfg.n_overlap, cfg.n_mels)
@@ -90,6 +87,8 @@ def extract(dataset):
         file_names = aug.expand_metadata((file_names, target_values))[0]
     else:
         n_transforms_iter = None
+
+    output_path = os.path.join(cfg.extraction_path, dataset.name + '.h5')
 
     # Generate features for each audio clip in the dataset
     features.extract_dataset(dataset.path,
@@ -231,10 +230,7 @@ def _load_data(dataset, is_training=False):
     import data_augmentation as aug
     import features
 
-    # Qualify path if it is a base name only
-    features_path = utils.qualify_path(dataset.name + '.h5',
-                                       cfg.extraction_path)
-
+    features_path = os.path.join(cfg.extraction_path, dataset.name + '.h5')
     x = utils.timeit(lambda: features.load_features(features_path),
                      'Loaded features of %s dataset' % dataset.name)
 

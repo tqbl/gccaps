@@ -110,38 +110,6 @@ def pad_truncate(x, length):
     return x
 
 
-def qualify_path(file_path, qualifier_path):
-    """Prepend a 'qualifier' path if the file path is a base name only.
-
-    This function is useful in the scenario that the user provides a
-    file name that should be qualified with respect to a directory other
-    than the current working directory; namely, the directory specified
-    by `qualifier_path`. Prepending the qualifier path to the given
-    file name achieves this.
-
-    If `file_path` is not a base name, it is assumed to be qualified
-    already, and the function simply returns its value.
-
-    Args:
-        file_path (str): File path to prepend to.
-        qualifier_path (str): Path that is to be prepended.
-
-    Returns:
-        str: Qualified file path.
-
-    Examples:
-        >>> qualify_path('foo.p', 'bar')
-        'bar/foo.p'
-
-        >>> qualify_path('baz/foo.p', 'bar')
-        'baz/foo.p'
-    """
-    if file_path != os.path.basename(file_path):
-        return file_path
-
-    return os.path.join(qualifier_path, file_path)
-
-
 def compute_scaler(x):
     r"""Compute mean and standard deviation values for the given data.
 
