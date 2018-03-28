@@ -7,6 +7,7 @@ gccaps
    capsnet
    capsulelayers
    config
+   data_augmentation
    data_generator
    evaluation
    features

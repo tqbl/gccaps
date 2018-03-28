@@ -73,6 +73,7 @@ def extract(dataset):
     Args:
         dataset: Dataset to extract features from.
     """
+    import data_augmentation as aug
     import features
 
     # Qualify output path if it is a base name only
@@ -82,10 +83,22 @@ def extract(dataset):
     extractor = features.LogmelExtractor(cfg.sample_rate, cfg.n_window,
                                          cfg.n_overlap, cfg.n_mels)
 
+    # Prepare for data augmentation if enabled
+    file_names, target_values = utils.read_metadata(dataset.metadata_path)
+    if dataset == cfg.training_set and cfg.enable_augmentation:
+        n_transforms_iter = aug.transform_counts(target_values)
+        file_names = aug.expand_metadata((file_names, target_values))[0]
+    else:
+        n_transforms_iter = None
+
     # Generate features for each audio clip in the dataset
-    file_names = utils.read_metadata(dataset.metadata_path)[0]
-    features.extract_dataset(dataset.path, file_names, extractor,
-                             cfg.clip_duration, output_path)
+    features.extract_dataset(dataset.path,
+                             file_names,
+                             extractor,
+                             cfg.clip_duration,
+                             output_path,
+                             n_transforms_iter=n_transforms_iter,
+                             )
 
 
 def train():
@@ -215,6 +228,7 @@ def _load_data(dataset, is_training=False):
         y (np.ndarray): The target values.
         names (list): The associated file names.
     """
+    import data_augmentation as aug
     import features
 
     # Qualify path if it is a base name only
@@ -240,6 +254,8 @@ def _load_data(dataset, is_training=False):
 
     names, y = utils.timeit(lambda: utils.read_metadata(dataset.metadata_path),
                             'Loaded %s metadata' % dataset.name)
+    if dataset == cfg.training_set and cfg.enable_augmentation:
+        names, y = aug.expand_metadata((names, y))
 
     return x, y, names
 

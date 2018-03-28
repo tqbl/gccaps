@@ -8,6 +8,7 @@ import librosa
 import numpy as np
 from tqdm import tqdm
 
+import data_augmentation as aug
 import utils
 
 
@@ -17,6 +18,7 @@ def extract_dataset(dataset_path,
                     clip_duration,
                     output_path,
                     recompute=False,
+                    n_transforms_iter=None,
                     ):
     """Extract features from the audio clips in a dataset.
 
@@ -29,6 +31,11 @@ def extract_dataset(dataset_path,
         output_path: File path of output HDF5 file.
         recompute (bool): Whether to extract features that already exist
             in the HDF5 file.
+        n_transforms_iter (iterator): Iterator for the number of
+            transformations to apply for each example. If data
+            augmentation should be disabled, set this to ``None``.
+            Otherwise, ensure that `file_names` has been expanded as if
+            by calling :func:`data_augmentation.expand_metadata`.
     """
     # Create/load the HDF5 file to store the feature vectors
     with h5py.File(output_path, 'a') as f:
@@ -40,14 +47,26 @@ def extract_dataset(dataset_path,
         timestamps = f.require_dataset('timestamps', (size,),
                                        dtype=h5py.special_dtype(vlen=bytes))
 
+        transforms = iter(())
+
         for i, name in enumerate(tqdm(file_names)):
             # Skip if existing feature vector should not be recomputed
             if timestamps[i] and not recompute:
+                next(transforms, None)
                 continue
 
-            # Load audio file from disk
-            path = os.path.join(dataset_path, name)
-            x, sample_rate = librosa.load(path, sr=None)
+            # Generate next transform or, if iterator is empty, load
+            # the next audio clip from disk. Note that the iterator will
+            # always be empty if data augmentation (DA) is disabled.
+            if next(transforms, None) is None:
+                # Load audio file from disk
+                path = os.path.join(dataset_path, name)
+                x, sample_rate = librosa.load(path, sr=None)
+
+                # Create new transform generator if DA is enabled
+                if n_transforms_iter:
+                    transforms = aug.transformations(
+                        x, sample_rate, next(n_transforms_iter))
 
             # Compute feature vector using extractor
             vec = extractor.extract(x, sample_rate)
