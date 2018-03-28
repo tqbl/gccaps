@@ -43,7 +43,7 @@ def train(tr_x, tr_y, val_x, val_y):
     # Train model using class-balancing generator
     batch_size = cfg.batch_size
     generator = data_generator.balanced_generator(tr_x, tr_y, batch_size)
-    steps_per_epoch = len(tr_x) // cfg.batch_size
+    steps_per_epoch = len(tr_x) // batch_size
     model.fit_generator(generator=generator,
                         steps_per_epoch=steps_per_epoch,
                         epochs=n_epochs,
@@ -69,8 +69,6 @@ def _create_callbacks():
 
     # Create callback to save model after every epoch
     model_path = cfg.model_path
-    if not os.path.exists(model_path):
-        os.makedirs(model_path)
     path = os.path.join(model_path, 'gccaps.{epoch:02d}-{val_acc:.4f}.hdf5')
     callbacks.append(ModelCheckpoint(filepath=path,
                                      monitor='val_acc',

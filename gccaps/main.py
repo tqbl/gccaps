@@ -1,6 +1,6 @@
 import argparse
 import glob
-import os.path
+import os
 import pickle
 import sys
 
@@ -88,6 +88,8 @@ def extract(dataset):
     else:
         n_transforms_iter = None
 
+    # Ensure output directory exists and set file path
+    os.makedirs(cfg.extraction_path, exist_ok=True)
     output_path = os.path.join(cfg.extraction_path, dataset.name + '.h5')
 
     # Generate features for each audio clip in the dataset
@@ -110,6 +112,11 @@ def train():
         For reproducibility, the random seed is set to a fixed value.
     """
     import training
+
+    # Ensure output directories exist
+    os.makedirs(os.path.dirname(cfg.scaler_path), exist_ok=True)
+    os.makedirs(cfg.model_path, exist_ok=True)
+    os.makedirs(cfg.log_path, exist_ok=True)
 
     # Load (standardized) input data and target values
     tr_x, tr_y, _ = _load_data(cfg.training_set, is_training=True)
@@ -151,8 +158,11 @@ def predict(dataset):
     total_at_pred = np.mean(at_preds, axis=0)
     total_sed_pred = np.mean(sed_preds, axis=0)
 
-    # Write predictions to disk
+    # Ensure output directory exists and set file path format
+    os.makedirs(os.path.dirname(cfg.predictions_path), exist_ok=True)
     predictions_path = cfg.predictions_path.format('%s', dataset.name)
+
+    # Write predictions to disk
     utils.write_predictions(names, total_at_pred, predictions_path % 'at')
     utils.write_predictions(names, total_sed_pred, predictions_path % 'sed')
 
@@ -172,9 +182,12 @@ def evaluate_audio_tagging(dataset):
     scores = evaluation.evaluate_audio_tagging(
         y_true, y_pred, threshold=cfg.at_threshold)
 
+    # Ensure output directory exist and set file path
+    os.makedirs(os.path.dirname(cfg.results_path), exist_ok=True)
+    output_path = cfg.results_path.format('at', dataset.name)
+
     # Evaluate tagging performance and write results
-    path = cfg.results_path.format('at', dataset.name)
-    evaluation.write_audio_tagging_results(scores, path)
+    evaluation.write_audio_tagging_results(scores, output_path)
 
 
 def evaluate_sed(dataset):
@@ -199,10 +212,13 @@ def evaluate_sed(dataset):
                                                  n_erosion=cfg.sed_erosion)
     predictions = inference.generate_event_lists(y_pred_b, resolution)
 
+    # Ensure output directory exist and set file path
+    os.makedirs(os.path.dirname(cfg.results_path), exist_ok=True)
+    output_path = cfg.results_path.format('sed', dataset.name)
+
     # Evaluate SED performance and write results
     metrics = evaluation.evaluate_sed(ground_truth, predictions, names)
-    path = cfg.results_path.format('sed', dataset.name)
-    with open(path, 'w') as f:
+    with open(output_path, 'w') as f:
         f.write(metrics.result_report_overall())
         f.write(metrics.result_report_class_wise())
 
