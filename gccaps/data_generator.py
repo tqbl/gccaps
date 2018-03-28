@@ -32,8 +32,8 @@ def balanced_generator(x, y, batch_size=32):
     # Compute the probabilities of an example belonging to a particular
     # class being sampled for the mini-batch, e.g. class_p[0] is the
     # probability that an example from class *0* is sampled.
-    class_p = [min((n // 1000) + 1, 5) for n in n_examples]
-    class_p = class_p / sum(class_p)
+    class_p = [min(n // 1000 + 1, 5) for n in n_examples]
+    class_p = np.array(class_p) / sum(class_p)
 
     offsets = [0] * n_classes
     while True:
