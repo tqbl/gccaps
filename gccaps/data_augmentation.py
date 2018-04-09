@@ -19,9 +19,6 @@ def transformations(y, sample_rate, n_transforms):
 
     Yields:
         np.ndarray: The transformed audio data.
-
-    Note:
-        This function modifies `x` each time a result is yielded.
     """
     # Return empty iterator if number of transforms is zero
     if n_transforms == (0, 0):
@@ -40,7 +37,7 @@ def transformations(y, sample_rate, n_transforms):
 
     # Create JAMS object for input audio and return iterable transforms
     jam = muda.jam_pack(jams.JAMS(), _audio=dict(y=y, sr=sample_rate))
-    return map(lambda x: x.sandbox._audio['y'], deformer.transform(jam))
+    return map(lambda x: x.sandbox.muda._audio['y'], deformer.transform(jam))
 
 
 def expand_metadata(metadata):

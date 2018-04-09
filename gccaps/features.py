@@ -58,7 +58,8 @@ def extract_dataset(dataset_path,
             # Generate next transform or, if iterator is empty, load
             # the next audio clip from disk. Note that the iterator will
             # always be empty if data augmentation (DA) is disabled.
-            if next(transforms, None) is None:
+            x = next(transforms, None)
+            if x is None:
                 # Load audio file from disk
                 path = os.path.join(dataset_path, name)
                 x, sample_rate = librosa.load(path, sr=None)
