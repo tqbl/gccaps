@@ -1,5 +1,9 @@
-prediction_epochs = list(range(10, 15))
-"""list: Models to select for prediction based on epoch number."""
+prediction_epochs = 'val_eer'
+"""Specification for which models (epochs) to select for prediction.
+
+Either a list of epoch numbers or a string specifying how to select the
+epochs. The valid string values are ``'val_acc'`` and ``'val_eer'``.
+"""
 
 at_threshold = 0.35
 """float: Number for thresholding audio tagging predictions."""

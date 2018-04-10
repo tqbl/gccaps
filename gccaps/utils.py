@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import csv
+import operator
 import pickle
 import time
 
@@ -210,6 +211,34 @@ def write_predictions_to_csv(names, preds, output_path):
                 writer.writerow([name] + pred.tolist())
 
 
+def read_training_history(path, ordering=None):
+    """Read training history from the specified CSV file.
+
+    Args:
+        path (str): Path to CSV file.
+        ordering (str): Column name to order the entries with respect to
+            or ``None`` if the entries should remain unordered.
+
+    Returns:
+        list: The training history.
+    """
+    with open(path, 'r') as f:
+        history = list(map(tuple, csv.reader(
+            f, quoting=csv.QUOTE_NONNUMERIC)))[1:]
+
+        # Return unordered list if no ordering is given
+        if ordering is None:
+            return history
+
+        # Determine how to order the entries
+        if ordering == 'val_acc':
+            idx, reverse = 1, True
+        elif ordering == 'val_eer':
+            idx, reverse = 2, False
+
+        return sorted(history, key=operator.itemgetter(idx), reverse=reverse)
+
+
 def write_training_history(history, output_path):
     """Write training history to a CSV file.
 
@@ -218,7 +247,7 @@ def write_training_history(history, output_path):
         output_path (str): Output file path.
     """
     with open(output_path, 'w') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
         writer.writerow(['epoch', 'val_acc', 'val_eer'])
         for entry in zip(history.epoch,
                          history.history['val_acc'],

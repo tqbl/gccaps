@@ -147,7 +147,8 @@ def predict(dataset):
 
     # Predict class probabilities for each model (epoch)
     at_preds, sed_preds = [], []
-    for epoch in cfg.prediction_epochs:
+
+    for epoch in _determine_epochs(cfg.prediction_epochs):
         model = _load_model(epoch)
         at_pred, sed_pred = utils.timeit(
             lambda: capsnet.gccaps_predict(test_x, model),
@@ -274,12 +275,35 @@ def _load_data(dataset, is_training=False):
     return x, y, names
 
 
-def _load_model(epoch=-1):
+def _determine_epochs(spec, n=5):
+    """Return a list of epoch numbers based on the given argument.
+
+    If `spec` is a list, this function simply returns the list.
+    Otherwise, `spec` should be a string, in which case this function
+    returns the top `n` epochs based on the training history file
+    and the contents of `spec`. For example, if `spec` is ``'val_acc'``,
+    the epochs that achieved the highest accuracy are returned.
+
+    Args:
+        spec: A list of epoch numbers or a string specifying how to
+            select the epoch numbers.
+
+    Returns:
+        list: The relevant epoch numbers.
+    """
+    if type(spec) is list:
+        return spec
+
+    history_path = os.path.join(cfg.model_path, 'history.csv')
+    history = utils.read_training_history(history_path, ordering=spec)
+    return [int(epoch) + 1 for epoch, *_ in history[:n]]
+
+
+def _load_model(epoch):
     """Load model based on specified epoch number.
 
     Args:
-        epoch (int): Epoch number of the model to load or -1 for the
-            last saved model.
+        epoch (int): Epoch number of the model to load.
 
     Returns:
         An instance of a Keras model.
@@ -290,18 +314,15 @@ def _load_model(epoch=-1):
     from capsulelayers import Length
     from gated_conv import GatedConv
 
-    model_path = cfg.model_path
-    if epoch == -1:
-        model_path = glob.glob(os.path.join(model_path, '*.hdf5'))[-1]
-    else:
-        model_path = glob.glob(os.path.join(
-            model_path, '*.%.02d*.hdf5' % epoch))[0]
+    model_path = glob.glob(os.path.join(
+        cfg.model_path, '*.%.02d*.hdf5' % epoch))[0]
 
     custom_objects = {
         'GatedConv': GatedConv,
         'CapsuleLayer': CapsuleLayer,
         'Length': Length,
     }
+
     return keras.models.load_model(model_path, custom_objects)
 
 
