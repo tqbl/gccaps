@@ -1,6 +1,5 @@
 from collections import OrderedDict
 import csv
-import os.path
 import pickle
 import time
 
@@ -209,6 +208,22 @@ def write_predictions_to_csv(names, preds, output_path):
         for i, name in enumerate(names):
             for pred in preds[i].T:
                 writer.writerow([name] + pred.tolist())
+
+
+def write_training_history(history, output_path):
+    """Write training history to a CSV file.
+
+    Args:
+        history: A Keras ``History`` object.
+        output_path (str): Output file path.
+    """
+    with open(output_path, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['epoch', 'val_acc', 'val_eer'])
+        for entry in zip(history.epoch,
+                         history.history['val_acc'],
+                         history.history['val_eer']):
+            writer.writerow(entry)
 
 
 def timeit(callback, message):

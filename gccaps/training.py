@@ -44,13 +44,13 @@ def train(tr_x, tr_y, val_x, val_y):
     batch_size = cfg.batch_size
     generator = data_generator.balanced_generator(tr_x, tr_y, batch_size)
     steps_per_epoch = len(tr_x) // batch_size
-    model.fit_generator(generator=generator,
-                        steps_per_epoch=steps_per_epoch,
-                        epochs=n_epochs,
-                        callbacks=callbacks,
-                        validation_data=(val_x, val_y),
-                        use_multiprocessing=False,
-                        )
+    return model.fit_generator(generator=generator,
+                               steps_per_epoch=steps_per_epoch,
+                               epochs=n_epochs,
+                               callbacks=callbacks,
+                               validation_data=(val_x, val_y),
+                               use_multiprocessing=False,
+                               )
 
 
 def _create_callbacks():

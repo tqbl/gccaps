@@ -125,7 +125,9 @@ def train():
     # Try to create reproducible results
     np.random.seed(cfg.initial_seed)
 
-    training.train(tr_x, tr_y, val_x, val_y)
+    history = training.train(tr_x, tr_y, val_x, val_y)
+    history_path = os.path.join(cfg.model_path, 'history.csv')
+    utils.write_training_history(history, history_path)
 
 
 def predict(dataset):
