@@ -1,5 +1,6 @@
 import os
 
+from keras.callbacks import Callback
 from keras.callbacks import EarlyStopping
 from keras.callbacks import LearningRateScheduler
 from keras.callbacks import ModelCheckpoint
@@ -9,6 +10,7 @@ from keras.optimizers import Adam
 import capsnet
 import config as cfg
 import data_generator
+import evaluation
 
 
 def train(tr_x, tr_y, val_x, val_y):
@@ -53,6 +55,23 @@ def train(tr_x, tr_y, val_x, val_y):
                                )
 
 
+class EqualErrorRate(Callback):
+    """A callback for computing the equal error rate (EER).
+
+    At the end of each epoch, the EER is computed and logged for the
+    predictions of the validation dataset.
+    """
+    def on_epoch_end(self, epoch, logs=None):
+        """Compute the EER of the validation set predictions."""
+        x, y_true = self.validation_data[:2]
+        y_pred = self.model.predict(x)
+        rate = evaluation.compute_eer(y_true.flatten(), y_pred.flatten())
+
+        # Log the computed value
+        logs = logs or {}
+        logs['val_eer'] = rate
+
+
 def _create_callbacks():
     """Create a list of training callbacks.
 
@@ -65,7 +84,8 @@ def _create_callbacks():
     Returns:
         list: List of Keras callbacks.
     """
-    callbacks = []
+    # Create callback for computing the EER after each epoch
+    callbacks = [EqualErrorRate()]
 
     # Create callback to save model after every epoch
     model_path = cfg.model_path
