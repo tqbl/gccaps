@@ -82,11 +82,11 @@ def compute_audio_tagging_scores(y_true, y_pred, y_pred_b, average=None):
 
     # Compute equal error rate
     if average is None:
-        eer = np.array([_compute_eer(y_true[:, i].flatten(),
+        eer = np.array([compute_eer(y_true[:, i].flatten(),
                                      y_pred[:, i].flatten())
                         for i in range(y_true.shape[1])])
     else:
-        eer = _compute_eer(y_true.flatten(), y_pred.flatten())
+        eer = compute_eer(y_true.flatten(), y_pred.flatten())
 
     # Compute area under curve (AUC) score
     auc = metrics.roc_auc_score(y_true, y_pred, average=average)
@@ -180,7 +180,7 @@ def evaluate_sed(ground_truth, predictions, names, time_resolution=1.0):
     return segment_based_metrics
 
 
-def _compute_eer(y_true, y_pred):
+def compute_eer(y_true, y_pred):
     """Compute the equal error rate (EER).
 
     Args:
