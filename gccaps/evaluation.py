@@ -83,7 +83,7 @@ def compute_audio_tagging_scores(y_true, y_pred, y_pred_b, average=None):
     # Compute equal error rate
     if average is None:
         eer = np.array([compute_eer(y_true[:, i].flatten(),
-                                     y_pred[:, i].flatten())
+                                    y_pred[:, i].flatten())
                         for i in range(y_true.shape[1])])
     else:
         eer = compute_eer(y_true.flatten(), y_pred.flatten())
@@ -206,6 +206,31 @@ def compute_eer(y_true, y_pred):
         offset = p1[1] - gradient * p1[0]
         rate = (1 - offset) / (1 + gradient)
     return rate
+
+
+def compute_map(y_true, y_pred, k=3):
+    """Compute the mean average precision at k (MAP@k).
+
+    Args:
+        y_true (np.ndarray): 2D array of ground truth values.
+        y_pred (np.ndarray): 2D array of predictions.
+        k (int): The maximum number of predicted elements.
+
+    Returns:
+        float: The mean average precision at k.
+
+    Note:
+        This function accepts a 2D array for `y_true`, but it assumes
+        the grounds truths are single-label.
+    """
+    # Compute how the true label ranks in terms of probability
+    idx = y_pred.argsort()[:, ::-1].argsort()
+    rank = idx[y_true.astype(bool)] + 1
+
+    if len(rank) > len(y_true):
+        raise Exception('Multi-label classification not supported')
+
+    return np.sum(1 / rank[rank <= k]) / len(y_true)
 
 
 def _print_row(row, is_header=False, use_separator=False):

@@ -55,7 +55,7 @@ def train(tr_x, tr_y, val_x, val_y):
                                )
 
 
-class EqualErrorRate(Callback):
+class EERLogger(Callback):
     """A callback for computing the equal error rate (EER).
 
     At the end of each epoch, the EER is computed and logged for the
@@ -72,6 +72,33 @@ class EqualErrorRate(Callback):
         logs['val_eer'] = rate
 
 
+class MAPLogger(Callback):
+    """A callback for computing the mean average precision at k (MAP@k).
+
+    At the end of each epoch, the MAP is computed and logged for the
+    predictions of the validation dataset. It is assumed that the ground
+    truths are single-label.
+
+    Args:
+        k (int): The maximum number of predicted elements.
+
+    Attributes:
+        k (int): The maximum number of predicted elements.
+    """
+    def __init__(self, k=3):
+        self.k = k
+
+    def on_epoch_end(self, epoch, logs=None):
+        """Compute the MAP of the validation set predictions."""
+        x, y_true = self.validation_data[:2]
+        y_pred = self.model.predict(x)
+        map_k = evaluation.compute_map(y_true, y_pred, self.k)
+
+        # Log the computed value
+        logs = logs or {}
+        logs['val_map'] = map_k
+
+
 def _create_callbacks():
     """Create a list of training callbacks.
 
@@ -84,8 +111,8 @@ def _create_callbacks():
     Returns:
         list: List of Keras callbacks.
     """
-    # Create callback for computing the EER after each epoch
-    callbacks = [EqualErrorRate()]
+    # Create callbacks for computing various metrics
+    callbacks = [EERLogger()]
 
     # Create callback to save model after every epoch
     model_path = cfg.model_path

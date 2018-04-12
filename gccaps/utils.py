@@ -223,18 +223,17 @@ def read_training_history(path, ordering=None):
         list: The training history.
     """
     with open(path, 'r') as f:
-        history = list(map(tuple, csv.reader(
-            f, quoting=csv.QUOTE_NONNUMERIC)))[1:]
+        reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
+        columns = next(reader)
+        history = list(map(tuple, reader))
 
         # Return unordered list if no ordering is given
         if ordering is None:
             return history
 
         # Determine how to order the entries
-        if ordering == 'val_acc':
-            idx, reverse = 1, True
-        elif ordering == 'val_eer':
-            idx, reverse = 2, False
+        idx = columns.index(ordering)
+        reverse = ordering in ['val_acc', 'val_map']
 
         return sorted(history, key=operator.itemgetter(idx), reverse=reverse)
 
@@ -247,11 +246,13 @@ def write_training_history(history, output_path):
         output_path (str): Output file path.
     """
     with open(output_path, 'w') as f:
+        # Determine what columns are to be included
+        columns = [x for x in history.history.items() if x[0][:3] == 'val']
+        columns, results = zip(*columns)
+
         writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
-        writer.writerow(['epoch', 'val_acc', 'val_eer'])
-        for entry in zip(history.epoch,
-                         history.history['val_acc'],
-                         history.history['val_eer']):
+        writer.writerow(['epoch', *columns])
+        for entry in zip(history.epoch, *results):
             writer.writerow(entry)
 
 
