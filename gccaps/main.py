@@ -208,7 +208,7 @@ def evaluate_sed(dataset):
     # Load predictions and convert to event list format
     path = cfg.predictions_path.format('sed', dataset.name)
     _, y_pred = utils.read_predictions(path)
-    resolution = cfg.clip_duration / y_pred.shape[1]
+    resolution = cfg.clip_duration / y_pred.shape[2]
     y_pred_b = inference.binarize_predictions_3d(y_pred,
                                                  threshold=cfg.sed_threshold,
                                                  n_dilation=cfg.sed_dilation,
