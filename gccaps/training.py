@@ -1,5 +1,7 @@
 import os
 
+from sklearn import metrics
+
 from keras.callbacks import Callback
 from keras.callbacks import EarlyStopping
 from keras.callbacks import LearningRateScheduler
@@ -11,6 +13,7 @@ import capsnet
 import config as cfg
 import data_generator
 import evaluation
+import inference
 
 
 def train(tr_x, tr_y, val_x, val_y):
@@ -86,6 +89,8 @@ class MAPLogger(Callback):
         k (int): The maximum number of predicted elements.
     """
     def __init__(self, k=3):
+        super(MAPLogger, self).__init__()
+
         self.k = k
 
     def on_epoch_end(self, epoch, logs=None):
@@ -97,6 +102,35 @@ class MAPLogger(Callback):
         # Log the computed value
         logs = logs or {}
         logs['val_map'] = map_k
+
+
+class F1ScoreLogger(Callback):
+    """A callback for computing the F1 score.
+
+    At the end of each epoch, the F1 score is computed and logged for
+    the predictions of the validation dataset.
+
+    Args:
+        threshold (float): Threshold used to binarize predictions.
+
+    Attributes:
+        threshold (float): Threshold used to binarize predictions.
+    """
+    def __init__(self, threshold=0.5):
+        super(MAPLogger, self).__init__()
+
+        self.threshold = threshold
+
+    def on_epoch_end(self, epoch, logs=None):
+        """Compute the F1 score of the validation set predictions."""
+        x, y_true = self.validation_data[:2]
+        y_pred = self.model.predict(x)
+        y_pred_b = inference.binarize_predictions_2d(y_pred, self.threshold)
+        f1_score = metrics.f1_score(y_true, y_pred_b, average='micro')
+
+        # Log the computed value
+        logs = logs or {}
+        logs['val_f1_score'] = f1_score
 
 
 def _create_callbacks():
@@ -112,7 +146,7 @@ def _create_callbacks():
         list: List of Keras callbacks.
     """
     # Create callbacks for computing various metrics
-    callbacks = [EERLogger()]
+    callbacks = [F1ScoreLogger(), EERLogger()]
 
     # Create callback to save model after every epoch
     model_path = cfg.model_path
