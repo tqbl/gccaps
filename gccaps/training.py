@@ -3,6 +3,7 @@ import os
 from sklearn import metrics
 
 from keras.callbacks import Callback
+from keras.callbacks import CSVLogger
 from keras.callbacks import EarlyStopping
 from keras.callbacks import LearningRateScheduler
 from keras.callbacks import ModelCheckpoint
@@ -145,8 +146,9 @@ def _create_callbacks():
     Returns:
         list: List of Keras callbacks.
     """
-    # Create callbacks for computing various metrics
-    callbacks = [F1ScoreLogger(), EERLogger()]
+    # Create callbacks for computing various metrics and logging them
+    csv_path = os.path.join(cfg.model_path, 'history.csv')
+    callbacks = [F1ScoreLogger(), EERLogger(), CSVLogger(csv_path)]
 
     # Create callback to save model after every epoch
     model_path = cfg.model_path

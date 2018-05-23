@@ -223,9 +223,9 @@ def read_training_history(path, ordering=None):
         list: The training history.
     """
     with open(path, 'r') as f:
-        reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
+        reader = csv.reader(f)
         columns = next(reader)
-        history = list(map(tuple, reader))
+        history = [tuple(float(x) for x in line) for line in reader]
 
         # Return unordered list if no ordering is given
         if ordering is None:
@@ -233,27 +233,9 @@ def read_training_history(path, ordering=None):
 
         # Determine how to order the entries
         idx = columns.index(ordering)
-        reverse = ordering in ['val_acc', 'val_map']
+        reverse = ordering in ['acc', 'val_acc', 'val_map', 'val_f1_score']
 
         return sorted(history, key=operator.itemgetter(idx), reverse=reverse)
-
-
-def write_training_history(history, output_path):
-    """Write training history to a CSV file.
-
-    Args:
-        history: A Keras ``History`` object.
-        output_path (str): Output file path.
-    """
-    with open(output_path, 'w') as f:
-        # Determine what columns are to be included
-        columns = [x for x in history.history.items() if x[0][:3] == 'val']
-        columns, results = zip(*columns)
-
-        writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
-        writer.writerow(['epoch', *columns])
-        for entry in zip(history.epoch, *results):
-            writer.writerow(entry)
 
 
 def timeit(callback, message):
