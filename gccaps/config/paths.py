@@ -19,6 +19,9 @@ model_path = os.path.join(work_path, 'models', training.training_id)
 log_path = os.path.join(work_path, 'logs', training.training_id)
 """str: Path to the directory of TensorBoard logs."""
 
+history_path = os.path.join(log_path, 'history.csv')
+"""str: Path to log file for training history."""
+
 predictions_path = os.path.join(
     work_path, 'predictions', training.training_id, '{}_{}_predictions.p')
 """str: Path to a model predictions file."""

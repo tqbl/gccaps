@@ -292,8 +292,7 @@ def _determine_epochs(spec, n=5):
     if type(spec) is list:
         return spec
 
-    history_path = os.path.join(cfg.model_path, 'history.csv')
-    history = utils.read_training_history(history_path, ordering=spec)
+    history = utils.read_training_history(cfg.history_path, ordering=spec)
     return [int(epoch) + 1 for epoch, *_ in history[:n]]
 
 
