@@ -118,7 +118,7 @@ class F1ScoreLogger(Callback):
         threshold (float): Threshold used to binarize predictions.
     """
     def __init__(self, threshold=0.5):
-        super(MAPLogger, self).__init__()
+        super(F1ScoreLogger, self).__init__()
 
         self.threshold = threshold
 
