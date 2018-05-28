@@ -1,8 +1,10 @@
 from collections import OrderedDict
 import csv
+import json
 import operator
 import pickle
 import time
+import types
 
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.preprocessing import StandardScaler
@@ -262,3 +264,21 @@ def timeit(callback, message):
     print('%s in %f seconds' % (message, time.time() - onset))
 
     return x
+
+
+def log_parameters(params, output_path):
+    """Write the given parameters to a file in JSON format.
+
+    Args:
+        params (dict or module): Parameters to serialize. If `params` is
+            a module, the relevant variables are serialized.
+        output_path (str): Output file path.
+    """
+    if isinstance(params, types.ModuleType):
+        params = {k: v for k, v in params.__dict__.items()
+                  if not k.startswith('_')}
+    elif not isinstance(params, dict):
+        raise ValueError("'params' must be a dict or a module")
+
+    with open(output_path, 'w') as f:
+        json.dump(params, f, indent=2)

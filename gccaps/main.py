@@ -92,6 +92,10 @@ def extract(dataset):
     os.makedirs(cfg.extraction_path, exist_ok=True)
     output_path = os.path.join(cfg.extraction_path, dataset.name + '.h5')
 
+    # Save free parameters to disk
+    utils.log_parameters(cfg.logmel, os.path.join(cfg.extraction_path,
+                                                  'parameters.json'))
+
     # Generate features for each audio clip in the dataset
     features.extract_dataset(dataset.path,
                              file_names,
@@ -124,6 +128,10 @@ def train():
 
     # Try to create reproducible results
     np.random.seed(cfg.initial_seed)
+
+    # Save free parameters to disk
+    utils.log_parameters(cfg.training, os.path.join(cfg.model_path,
+                                                    'parameters.json'))
 
     training.train(tr_x, tr_y, val_x, val_y)
 
@@ -162,6 +170,11 @@ def predict(dataset):
     # Ensure output directory exists and set file path format
     os.makedirs(os.path.dirname(cfg.predictions_path), exist_ok=True)
     predictions_path = cfg.predictions_path.format('%s', dataset.name)
+
+    # Save free parameters to disk
+    utils.log_parameters({'prediction_epochs': cfg.prediction_epochs},
+                         os.path.join(os.path.dirname(cfg.predictions_path),
+                                      'parameters.json'))
 
     # Write predictions to disk
     utils.write_predictions(names, total_at_pred, predictions_path % 'at')
