@@ -9,6 +9,7 @@ from keras.callbacks import LearningRateScheduler
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import TensorBoard
 from keras.optimizers import Adam
+import keras.utils
 
 import capsnet
 import config as cfg
@@ -29,7 +30,7 @@ def train(tr_x, tr_y, val_x, val_y):
     # Create model and print summary
     model = capsnet.gccaps(input_shape=tr_x.shape[1:],
                            n_classes=tr_y.shape[1])
-    model.summary()
+    _print_model_summary(model)
 
     # Use Adam SGD optimizer
     optimizer = Adam(lr=cfg.learning_rate['initial'])
@@ -132,6 +133,17 @@ class F1ScoreLogger(Callback):
         # Log the computed value
         logs = logs or {}
         logs['val_f1_score'] = f1_score
+
+
+def _print_model_summary(model):
+    """Print a summary of the model and also write the summary to disk.
+
+    Args:
+        model: The Keras model to summarize.
+    """
+    keras.utils.print_summary(model)
+    with open(os.path.join(cfg.model_path, 'summary.txt'), 'w') as f:
+        keras.utils.print_summary(model, print_fn=lambda s: f.write(s + '\n'))
 
 
 def _create_callbacks():
