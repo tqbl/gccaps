@@ -76,9 +76,8 @@ def compute_audio_tagging_scores(y_true, y_pred, y_pred_b, average=None):
         be the same.
     """
     # Compute precision and recall scores
-    precision = metrics.precision_score(y_true, y_pred_b, average=average)
-    recall = metrics.recall_score(y_true, y_pred_b, average=average)
-    f1_score = 2 * precision * recall / (precision + recall + 1e-9)
+    precision, recall, f1_score, _ = metrics.precision_recall_fscore_support(
+        y_true, y_pred_b, average=average)
 
     # Compute equal error rate
     if average is None:
