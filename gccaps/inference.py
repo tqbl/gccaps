@@ -14,7 +14,9 @@ def binarize_predictions_2d(predictions, threshold=0.5):
 
     Args:
         predictions (np.ndarray): 2D array of predictions.
-        threshold (float): Threshold used to determine binary value.
+        threshold (float or list): Threshold used to determine the
+            binary values. If a list is given, it must specify a
+            threshold for each class.
 
     Returns:
         np.ndarray: Binarized prediction values.
@@ -46,7 +48,9 @@ def binarize_predictions_3d(predictions, threshold=0.5,
 
     Args:
         predictions (np.ndarray): 2D array of predictions.
-        threshold (float): Threshold used to determine binary value.
+        threshold (float or list): Threshold used to determine the
+            binary values. If a list is given, it must specify a
+            threshold for each class.
         n_dilation (int): A sequence of zeros of this length or less
             will be 'filled'.
         n_erosion (int): A sequence of ones of this length or less in
@@ -55,7 +59,9 @@ def binarize_predictions_3d(predictions, threshold=0.5,
     Returns:
         np.ndarray: Binarized prediction values.
     """
+    predictions = np.transpose(predictions, (0, 2, 1))
     binary_preds = (predictions > threshold).astype(int)
+    binary_preds = np.transpose(binary_preds, (0, 2, 1))
 
     return np.array([[_erode(_dilate(label_pred, n_dilation), n_erosion)
                       for label_pred in sample_pred]

@@ -49,6 +49,7 @@ def main():
                                  choices=['validation', 'test'],
                                  default='test',
                                  )
+    parser_evaluate.add_argument('--thresholds', action='store_true')
 
     args = parser.parse_args()
 
@@ -62,7 +63,7 @@ def main():
         eval_all = args.task == 'all'
         dataset = cfg.to_dataset(args.dataset)
         if args.task == 'tagging' or eval_all:
-            evaluate_audio_tagging(dataset)
+            evaluate_audio_tagging(dataset, args.thresholds)
         if args.task == 'sed' or eval_all:
             evaluate_sed(dataset)
 
@@ -181,7 +182,7 @@ def predict(dataset):
     utils.write_predictions(names, total_sed_pred, predictions_path % 'sed')
 
 
-def evaluate_audio_tagging(dataset):
+def evaluate_audio_tagging(dataset, compute_thresholds=False):
     """Evaluate the audio tagging predictions and write results.
 
     Args:
@@ -193,14 +194,22 @@ def evaluate_audio_tagging(dataset):
     path = cfg.predictions_path.format('at', dataset.name)
     _, y_pred = utils.read_predictions(path)
 
-    scores = evaluation.evaluate_audio_tagging(
-        y_true, y_pred, threshold=cfg.at_threshold)
+    # Compute thresholds if flag is set
+    if compute_thresholds:
+        thresholds = evaluation.compute_thresholds(y_true, y_pred)
+        output_path = os.path.join(os.path.dirname(cfg.predictions_path),
+                                   'thresholds.p')
+        with open(output_path, 'wb') as f:
+            pickle.dump(thresholds, f)
 
-    # Ensure output directory exist and set file path
+    # Evaluate audio tagging performance
+    threshold = _determine_threshold(cfg.at_threshold)
+    scores = evaluation.evaluate_audio_tagging(
+        y_true, y_pred, threshold=threshold)
+
+    # Ensure output directory exist and write results
     os.makedirs(os.path.dirname(cfg.results_path), exist_ok=True)
     output_path = cfg.results_path.format('at', dataset.name)
-
-    # Evaluate tagging performance and write results
     evaluation.write_audio_tagging_results(scores, output_path)
 
 
@@ -216,22 +225,23 @@ def evaluate_sed(dataset):
     names, ground_truth = utils.read_metadata(dataset.metadata_path,
                                               weakly_labeled=False)
 
-    # Load predictions and convert to event list format
+    # Load and binarize predictions
     path = cfg.predictions_path.format('sed', dataset.name)
     _, y_pred = utils.read_predictions(path)
-    resolution = cfg.clip_duration / y_pred.shape[2]
+    threshold = _determine_threshold(cfg.sed_threshold)
     y_pred_b = inference.binarize_predictions_3d(y_pred,
-                                                 threshold=cfg.sed_threshold,
+                                                 threshold=threshold,
                                                  n_dilation=cfg.sed_dilation,
                                                  n_erosion=cfg.sed_erosion)
-    predictions = inference.generate_event_lists(y_pred_b, resolution)
 
-    # Ensure output directory exist and set file path
+    # Convert to event list format and evaluate SED performance
+    resolution = cfg.clip_duration / y_pred.shape[2]
+    predictions = inference.generate_event_lists(y_pred_b, resolution)
+    metrics = evaluation.evaluate_sed(ground_truth, predictions, names)
+
+    # Ensure output directory exist and write results
     os.makedirs(os.path.dirname(cfg.results_path), exist_ok=True)
     output_path = cfg.results_path.format('sed', dataset.name)
-
-    # Evaluate SED performance and write results
-    metrics = evaluation.evaluate_sed(ground_truth, predictions, names)
     with open(output_path, 'w') as f:
         f.write(metrics.result_report_overall())
         f.write(metrics.result_report_class_wise())
@@ -307,6 +317,35 @@ def _determine_epochs(spec, n=5):
 
     history = utils.read_training_history(cfg.history_path, ordering=spec)
     return [int(epoch) + 1 for epoch, *_ in history[:n]]
+
+
+def _determine_threshold(threshold, clip_min=0.1, clip_max=0.9):
+    """Return the actual threshold(s) to use based on the given value.
+
+    Args:
+        threshold (number or list): A value of -1 indicates that the
+            thresholds should be loaded from a file. Otherwise, it is
+            simply the value this function should return.
+        clip_min (float): Minimum value that a threshold should be. Only
+            enforced if the thresholds are loaded from disk.
+        clip_max (float): Maximum value that a threshold should be. Only
+            enforced if the thresholds are loaded from disk.
+
+    Returns:
+        float or list: The appropriate threshold(s).
+    """
+    if threshold != -1:
+        return threshold
+
+    path = os.path.join(os.path.dirname(cfg.predictions_path), 'thresholds.p')
+
+    if not os.path.isfile(path):
+        print('Warning: Defaulting to threshold of 0.5')
+        return 0.5
+
+    with open(path, 'rb') as f:
+        thresholds = pickle.load(f)
+        return np.clip(thresholds, clip_min, clip_max)
 
 
 def _load_model(epoch):

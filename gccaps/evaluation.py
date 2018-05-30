@@ -233,6 +233,31 @@ def compute_map(y_true, y_pred, k=3):
     return np.sum(1 / rank[rank <= k]) / len(y_true)
 
 
+def compute_thresholds(y_true, y_pred):
+    """Compute the optimal probability thresholds for each class.
+
+    This function computes the precision-recall curve for each class,
+    and selects the threshold corresponding to the highest F1 score.
+
+    Args:
+        y_true (np.ndarray): 2D array of ground truth values.
+        y_pred (np.ndarray): 2D array of predictions.
+
+    Returns:
+        list: The optimal per-class probability thresholds.
+    """
+    thresholds = []
+    for i in range(y_true.shape[1]):
+        p, r, t = metrics.precision_recall_curve(y_true[:, i],
+                                                 y_pred[:, i])
+        p = np.array(p)
+        r = np.array(r)
+        f1_score = 2 * p * r / (p + r + 1e-9)
+        thresholds.append(t[np.argmax(f1_score)])
+
+    return thresholds
+
+
 def _print_row(row, is_header=False, use_separator=False):
     """Print the given row in a tabulated format.
 
