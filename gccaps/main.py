@@ -187,6 +187,11 @@ def evaluate_audio_tagging(dataset, compute_thresholds=False):
 
     Args:
         dataset: Dataset for retrieving ground truth.
+        compute_thresholds (bool): Whether to compute and record
+            per-class optimal thresholds.
+
+    See Also:
+        :func:`evaluation.compute_thresholds`
     """
     import evaluation
 
