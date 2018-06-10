@@ -1,8 +1,6 @@
 import os.path
 import datetime as dt
 
-import scipy.signal as signal
-
 import h5py
 import librosa
 import numpy as np
@@ -101,25 +99,25 @@ class LogmelExtractor(object):
     Args:
         sample_rate (number): Target resampling rate.
         n_window (int): Number of bins in each spectrogram frame.
-        n_overlap (int): Amount of overlap between frames.
+        hop_length (int): Number of samples between frames.
         n_mels (int): Number of Mel bands.
 
     Attributes:
         sample_rate (number): Target resampling rate.
         n_window (int): Number of bins in each spectrogram frame.
-        n_overlap (int): Amount of overlap between frames.
+        hop_length (int): Number of samples between frames.
         mel_fb (np.ndarray): Mel fitlerbank matrix.
     """
 
     def __init__(self,
                  sample_rate=16000,
                  n_window=1024,
-                 n_overlap=512,
+                 hop_length=512,
                  n_mels=64,
                  ):
         self.sample_rate = sample_rate
         self.n_window = n_window
-        self.n_overlap = n_overlap
+        self.hop_length = hop_length
 
         # Create Mel filterbank matrix
         self.mel_fb = librosa.filters.mel(sr=sample_rate,
@@ -138,8 +136,7 @@ class LogmelExtractor(object):
             tuple: The shape of a logmel feature vector.
         """
         n_samples = clip_duration * self.sample_rate
-        hop = self.n_window - self.n_overlap
-        n_frames = (n_samples - self.n_window) // hop + 1
+        n_frames = (n_samples - self.n_window) // self.hop_length + 1
         return (n_frames, self.mel_fb.shape[0])
 
     def extract(self, x, sample_rate):
@@ -155,15 +152,9 @@ class LogmelExtractor(object):
         # Resample to target sampling rate
         x = librosa.resample(x, sample_rate, self.sample_rate)
 
-        # Compute spectrogram using Hamming window
-        _, _, sxx = signal.spectrogram(x=x,
-                                       window='hamming',
-                                       nperseg=self.n_window,
-                                       noverlap=self.n_overlap,
-                                       detrend=False,
-                                       mode='magnitude',
-                                       )
+        # Compute short-time Fourier transform
+        D = librosa.stft(x, n_fft=self.n_window, hop_length=self.hop_length)
         # Transform to Mel frequency scale
-        sxx = np.dot(sxx.T, self.mel_fb.T)
-        # Apply log nonlinearity
-        return np.log(sxx + 1e-8).astype(np.float32)
+        S = np.dot(self.mel_fb, np.abs(D)).T
+        # Apply log nonlinearity and return as float32
+        return librosa.amplitude_to_db(S, ref=np.max, top_db=None)

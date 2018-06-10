@@ -78,8 +78,11 @@ def extract(dataset):
     import features
 
     # Use a logmel representation for feature extraction
-    extractor = features.LogmelExtractor(cfg.sample_rate, cfg.n_window,
-                                         cfg.n_overlap, cfg.n_mels)
+    extractor = features.LogmelExtractor(sample_rate=cfg.sample_rate,
+                                         n_window=cfg.n_window,
+                                         hop_length=cfg.hop_length,
+                                         n_mels=cfg.n_mels,
+                                         )
 
     # Prepare for data augmentation if enabled
     file_names, target_values = utils.read_metadata(dataset.metadata_path)
@@ -278,6 +281,9 @@ def _load_data(dataset, is_training=False):
     features_path = os.path.join(cfg.extraction_path, dataset.name + '.h5')
     x = utils.timeit(lambda: features.load_features(features_path),
                      'Loaded features of %s dataset' % dataset.name)
+
+    # Clip dynamic range to 90 dB
+    x = np.maximum(x, x.max() - 90.0)
 
     # Load scaler from file if cached, or else compute it.
     scaler_path = cfg.scaler_path
