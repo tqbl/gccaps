@@ -1,3 +1,6 @@
+"""See Also: https://github.com/XifengGuo/CapsNet-Keras"""
+
+
 import keras.backend as K
 import keras.initializers as initializers
 from keras.layers import Conv2D

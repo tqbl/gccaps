@@ -43,8 +43,9 @@ class GatedConv(Conv2D):
 
     References:
         .. [1] Y. N. Dauphin, A. Fan, M. Auli, and D. Grangier,
-               "Language modeling with gated convolutional networks,"
-               ArXiv e-prints, 2016.
+               “Language modeling with gated convolutional networks,” in
+               Proc. 34th Int. Conf. Mach. Learn. (ICML), vol. 70,
+               Sydney, Australia, 2017, pp. 933–941.
     """
     def __init__(self, n_filters=64, kernel_size=(3, 3), **kwargs):
         super(GatedConv, self).__init__(filters=n_filters*2,

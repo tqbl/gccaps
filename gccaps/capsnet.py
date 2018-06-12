@@ -30,12 +30,14 @@ def gccaps(input_shape, n_classes):
 
     x = Reshape(input_shape + (1,))(input_tensor)
 
+    # Apply three blocks of gated convolutions
     x = gated_conv.block(x, n_filters=64, pool_size=(2, 2))
     x = gated_conv.block(x, n_filters=64, pool_size=(2, 2))
     x = gated_conv.block(x, n_filters=64, pool_size=(2, 2))
 
-    n_steps = int(x.shape[1])
+    n_steps = int(x.shape[1])  # Number of time slices
 
+    # Apply primary capsule layer with batch norm and dropout
     x = capsules.primary_capsules(x, n_channels=16, dim_capsule=4,
                                   kernel_size=3, strides=(1, 2),
                                   padding='same', activation='relu',
@@ -44,15 +46,18 @@ def gccaps(input_shape, n_classes):
     x = BatchNormalization(axis=-1)(x)
     x = Dropout(rate=0.5)(x)
 
+    # Apply capsule layer layer to each time slice
     caps = TimeDistributed(CapsuleLayer(n_capsules=n_classes,
                                         dim_capsule=8, routings=3))(x)
     caps = TimeDistributed(Lambda(capsules.length),
                            name='capsule_length')(caps)
 
+    # Apply 'temporal attention' layer to each time slice
     att = Reshape((n_steps, -1))(x)
     att = TimeDistributed(Dense(n_classes, activation='sigmoid'),
                           name='attention_layer')(att)
 
+    # Merge the aforementioned TimeDistributed outputs
     x = Lambda(_merge, output_shape=(n_classes,),
                name='merge')([caps, att])
 
