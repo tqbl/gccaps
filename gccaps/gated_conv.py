@@ -46,12 +46,9 @@ class GatedConv(Conv2D):
                "Language modeling with gated convolutional networks,"
                ArXiv e-prints, 2016.
     """
-    def __init__(self, n_filters=64, kernel_size=(3, 3),
-                 strides=(1, 1), padding='valid', **kwargs):
+    def __init__(self, n_filters=64, kernel_size=(3, 3), **kwargs):
         super(GatedConv, self).__init__(filters=n_filters*2,
                                         kernel_size=kernel_size,
-                                        strides=strides,
-                                        padding=padding,
                                         **kwargs)
 
         self.n_filters = n_filters
