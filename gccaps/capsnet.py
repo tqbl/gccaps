@@ -10,9 +10,8 @@ from keras.layers import TimeDistributed
 from keras.layers import BatchNormalization
 from keras.models import Model
 
-from capsulelayers import CapsuleLayer
-from capsulelayers import Length
-from capsulelayers import PrimaryCap
+import capsules
+from capsules import CapsuleLayer
 
 import gated_conv
 
@@ -35,16 +34,22 @@ def gccaps(input_shape, n_classes):
     x = gated_conv.block(x, n_filters=64, pool_size=(2, 2))
     x = gated_conv.block(x, n_filters=64, pool_size=(2, 2))
 
-    x = PrimaryCap(x, dim_capsule=4, n_channels=16, kernel_size=3,
-                   strides=(1, 2), padding='same')
+    n_steps = int(x.shape[1])
+
+    x = capsules.primary_capsules(x, n_channels=16, dim_capsule=4,
+                                  kernel_size=3, strides=(1, 2),
+                                  padding='same', activation='relu',
+                                  name='primary_capsule_conv')
+    x = Reshape((n_steps, -1, 4))(x)
     x = BatchNormalization(axis=-1)(x)
     x = Dropout(rate=0.5)(x)
 
-    caps = TimeDistributed(CapsuleLayer(num_capsule=n_classes,
+    caps = TimeDistributed(CapsuleLayer(n_capsules=n_classes,
                                         dim_capsule=8, routings=3))(x)
-    caps = TimeDistributed(Length(), name='capsule_length')(caps)
+    caps = TimeDistributed(Lambda(capsules.length),
+                           name='capsule_length')(caps)
 
-    att = Reshape((int(x.shape[1]), -1))(x)
+    att = Reshape((n_steps, -1))(x)
     att = TimeDistributed(Dense(n_classes, activation='sigmoid'),
                           name='attention_layer')(att)
 

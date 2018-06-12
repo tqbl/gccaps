@@ -370,8 +370,7 @@ def _load_model(epoch):
     """
     import keras.models
 
-    from capsulelayers import CapsuleLayer
-    from capsulelayers import Length
+    from capsules import CapsuleLayer
     from gated_conv import GatedConv
 
     model_path = glob.glob(os.path.join(
@@ -380,7 +379,6 @@ def _load_model(epoch):
     custom_objects = {
         'GatedConv': GatedConv,
         'CapsuleLayer': CapsuleLayer,
-        'Length': Length,
     }
 
     return keras.models.load_model(model_path, custom_objects)

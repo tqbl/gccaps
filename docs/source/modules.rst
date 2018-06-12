@@ -5,7 +5,7 @@ gccaps
    :maxdepth: 4
 
    capsnet
-   capsulelayers
+   capsules
    config
    data_augmentation
    data_generator
