@@ -1,8 +1,8 @@
 GCCaps - Capsule Routing for Sound Event Detection
 ==================================================
 
-This is the source code for the system described in the paper 'Capsule Routing
-for Sound Event Detection'.
+This is the source code for the system described in the paper `'Capsule Routing
+for Sound Event Detection' <https://arxiv.org/abs/1806.04699>`_.
 
 Requirements
 ------------
@@ -86,4 +86,4 @@ will be computed for each class, and the threshold corresponding to the highest
 F-score will be saved to disk. The idea is to compute the thresholds for the
 validation set and use them for the test set. To use the 'optimal' thresholds,
 set ``at_threshold`` or ``sed_threshold`` in ``gccaps/config/predictions.py``
-to ``-1``. This is included for experimental purposes.
+to ``-1``. This is included for experimental purposes and may be detrimental.
