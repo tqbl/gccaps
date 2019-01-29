@@ -21,11 +21,11 @@ For example::
     """str: Path to root directory containing input audio clips."""
 
     training_set = Dataset(
-        name='training_weak',
-        path=os.path.join(_root_dataset_path, 'audio/training'),
-        metadata_path=os.path.join(_root_dataset_path, 'metadata/training.csv'),
+        name='training',
+        path=os.path.join(_root_dataset_path, 'training'),
+        metadata_path='metadata/groundtruth_weak_label_training_set.csv',
     )
-    """Dataset instance for the weak training dataset."""
+    """Dataset instance for the training dataset."""
 
 You may also want to change the work path::
 
