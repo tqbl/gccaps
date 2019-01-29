@@ -54,14 +54,22 @@ validation_set = Dataset(
     path=os.path.join(_root_dataset_path, 'testing'),
     metadata_path='metadata/groundtruth_strong_label_testing_set.csv',
 )
-"""Dataset instance for the validation dataset."""
+"""Dataset instance for the validation dataset.
+
+Note:
+    The validation set is called the 'testing' set in DCASE 2017.
+"""
 
 test_set = Dataset(
     name='test',
     path=os.path.join(_root_dataset_path, 'evaluation'),
     metadata_path='metadata/groundtruth_strong_label_evaluation_set.csv',
 )
-"""Dataset instance for the testing dataset."""
+"""Dataset instance for the test dataset.
+
+Note:
+    The test set is called the 'evaluation' set in DCASE 2017.
+"""
 
 
 def to_dataset(name):
